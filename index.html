@@ -108,7 +108,56 @@ class Particle {
   isDead() { return this.life <= 0; }
 }
 
-let particles = [];
+// ==================== 道具系统 ====================
+class PowerUp {
+  constructor(x, y, type) {
+    this.x = x; this.y = y;
+    this.type = type; // 'weapon', 'shield', 'life', 'bomb'
+    this.w = 20; this.h = 20;
+    this.speed = 1.5;
+    this.alive = true;
+    this.bobTimer = Math.random() * Math.PI * 2;
+  }
+  update() {
+    this.y += this.speed;
+    this.bobTimer += 0.08;
+    if (this.y > H + 30) this.alive = false;
+  }
+  draw() {
+    const bob = Math.sin(this.bobTimer) * 3;
+    const yy = this.y + bob;
+    // 发光背景
+    const colors = {
+      weapon: 'rgba(0, 255, 200, 0.4)',
+      shield: 'rgba(0, 150, 255, 0.4)',
+      life: 'rgba(255, 100, 100, 0.4)',
+      bomb: 'rgba(255, 200, 0, 0.4)'
+    };
+    const icons = {
+      weapon: '⚡',
+      shield: '🛡',
+      life: '❤',
+      bomb: '💥'
+    };
+    ctx.fillStyle = colors[this.type];
+    ctx.beginPath();
+    ctx.arc(this.x, yy, 14, 0, Math.PI * 2);
+    ctx.fill();
+    // 边框闪烁
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(this.bobTimer * 2) * 0.3})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(this.x, yy, 14, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(icons[this.type], this.x, yy);
+  }
+}
+
+let powerUps = [];
 function createExplosion(x, y, count = 20, color = 'rgba(255, 150, 50, 1)') {
   for (let i = 0; i < count; i++) {
     const p = new Particle(x, y, color, 5, Math.random() * 3 + 1, 1);
@@ -406,6 +455,7 @@ class SmallEnemy extends Enemy {
       this.alive = false;
       score += this.score;
       createExplosion(this.x, this.y, 15, 'rgba(255, 100, 50, 1)');
+      dropPowerUp(this.x, this.y, this.type);
     }
   }
 }
@@ -471,6 +521,7 @@ class MediumEnemy extends Enemy {
       this.alive = false;
       score += this.score;
       createExplosion(this.x, this.y, 25, 'rgba(255, 150, 50, 1)');
+      dropPowerUp(this.x, this.y, this.type);
     }
   }
 }
@@ -617,6 +668,20 @@ function createPowerup(x, y) {
   const types = ['weapon', 'weapon', 'shield', 'life', 'bomb'];
   const type = types[Math.floor(Math.random() * types.length)];
   return new PowerUp(x, y, type);
+}
+
+function dropPowerUp(x, y, enemyType) {
+  // 小型敌机 8% 概率掉落，中型 18%，大型已在上面处理
+  let dropChance = 0;
+  switch (enemyType) {
+    case 'small': dropChance = 0.08; break;
+    case 'medium': dropChance = 0.18; break;
+    case 'big': dropChance = 0.5; break;
+    default: dropChance = 0.08; break;
+  }
+  if (Math.random() < dropChance) {
+    powerups.push(createPowerup(x, y));
+  }
 }
 
 // ==================== 敌人生成 ====================
