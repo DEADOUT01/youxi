@@ -136,8 +136,8 @@ class PlayerShip {
     this.w = 40;
     this.h = 48;
     this.speed = 5;
-    this.lives = 3;
-    this.maxLives = 5;
+    this.lives = 5;
+    this.maxLives = 8;
     this.invincible = 0;
     this.fireRate = 12;
     this.fireTimer = 0;
@@ -288,8 +288,8 @@ class PlayerShip {
       return;
     }
     this.lives--;
-    this.invincible = 90;
-    this.powerLevel = Math.max(1, this.powerLevel - 1);
+    this.invincible = 120;
+    this.powerLevel = Math.min(4, this.powerLevel + 1);
     createExplosion(this.x, this.y, 30, 'rgba(255, 100, 50, 1)');
     if (this.lives <= 0) {
       gameState = 'gameover';
@@ -363,7 +363,7 @@ class SmallEnemy extends Enemy {
     super(x, y, 'small');
     this.w = 24; this.h = 24;
     this.hp = 1; this.maxHp = 1;
-    this.speed = 2 + Math.random();
+    this.speed = 1.5;
     this.score = 100;
     this.fireRate = 120;
     this.vx = (Math.random() - 0.5) * 2;
@@ -375,11 +375,11 @@ class SmallEnemy extends Enemy {
     this.fireTimer--;
     if (this.fireTimer <= 0) {
       this.fire();
-      this.fireTimer = this.fireRate - wave * 5;
+      this.fireTimer = this.fireRate - wave * 3;
     }
   }
   fire() {
-    bullets.push(new Bullet(this.x, this.y + this.h / 2, 0, 4, 3, 'enemy', 1));
+    bullets.push(new Bullet(this.x, this.y + this.h / 2, 0, 3, 3, 'enemy', 1));
   }
   draw() {
     ctx.save();
@@ -416,26 +416,26 @@ class MediumEnemy extends Enemy {
   constructor(x, y) {
     super(x, y, 'medium');
     this.w = 40; this.h = 36;
-    this.hp = 5 + wave; this.maxHp = this.hp;
-    this.speed = 1;
+    this.hp = 3 + wave; this.maxHp = this.hp;
+    this.speed = 0.8;
     this.score = 300;
-    this.fireRate = 60;
+    this.fireRate = 80;
     this.moveDir = Math.random() > 0.5 ? 1 : -1;
   }
   update() {
     this.y += this.speed;
-    this.x += this.moveDir * 1.5;
+    this.x += this.moveDir * 1.2;
     if (this.x < 30 || this.x > W - 30) this.moveDir *= -1;
     if (this.y > H + 50) this.alive = false;
     this.fireTimer--;
     if (this.fireTimer <= 0) {
       this.fire();
-      this.fireTimer = this.fireRate - wave * 3;
+      this.fireTimer = this.fireRate - wave * 2;
     }
   }
   fire() {
     const angle = Math.atan2(player.y - this.y, player.x - this.x);
-    bullets.push(new Bullet(this.x, this.y + this.h / 2, Math.cos(angle) * 3, Math.sin(angle) * 3, 4, 'enemy', 1));
+    bullets.push(new Bullet(this.x, this.y + this.h / 2, Math.cos(angle) * 2.5, Math.sin(angle) * 2.5, 4, 'enemy', 1));
   }
   draw() {
     ctx.save();
@@ -481,10 +481,10 @@ class BigEnemy extends Enemy {
   constructor(x, y) {
     super(x, y, 'big');
     this.w = 60; this.h = 50;
-    this.hp = 20 + wave * 3; this.maxHp = this.hp;
-    this.speed = 0.5;
+    this.hp = 12 + wave * 2; this.maxHp = this.hp;
+    this.speed = 0.4;
     this.score = 1000;
-    this.fireRate = 30;
+    this.fireRate = 45;
   }
   update() {
     this.y += this.speed;
@@ -500,7 +500,7 @@ class BigEnemy extends Enemy {
     for (let i = -2; i <= 2; i++) {
       bullets.push(new Bullet(
         this.x + i * 12, this.y + this.h / 2,
-        i * 0.5, 3.5, 4, 'enemy', 1
+        i * 0.4, 2.8, 4, 'enemy', 1
       ));
     }
   }
@@ -628,24 +628,24 @@ let player;
 
 function spawnWave() {
   waveTimer++;
-  const spawnRate = Math.max(30, 90 - wave * 5);
+  const spawnRate = Math.max(60, 120 - wave * 5);
 
   if (waveTimer % spawnRate === 0) {
     const x = Math.random() * (W - 100) + 50;
     enemies.push(new SmallEnemy(x, -30));
   }
 
-  if (waveTimer % (spawnRate * 3) === 0) {
+  if (waveTimer % (spawnRate * 4) === 0) {
     const x = Math.random() * (W - 100) + 50;
     enemies.push(new MediumEnemy(x, -40));
   }
 
-  if (waveTimer % 600 === 0) {
+  if (waveTimer % 900 === 0) {
     enemies.push(new BigEnemy(W / 2, -60));
   }
 
   // 升级波次
-  if (waveTimer % 900 === 0) {
+  if (waveTimer % 1200 === 0) {
     wave++;
     showFloatingText('WAVE ' + wave, W / 2, H / 2, '#00ffff', 60);
   }
