@@ -135,10 +135,10 @@ class PlayerShip {
     this.y = H - 120;
     this.w = 40;
     this.h = 48;
-    this.speed = 5;
-    this.lives = 5;
-    this.maxLives = 8;
-    this.invincible = 0;
+    this.speed = 6;
+    this.lives = 8;
+    this.maxLives = 10;
+    this.invincible = 30;
     this.fireRate = 12;
     this.fireTimer = 0;
     this.powerLevel = 1;
@@ -154,12 +154,11 @@ class PlayerShip {
     if (keys['ArrowUp'] || keys['KeyW']) dy -= 1;
     if (keys['ArrowDown'] || keys['KeyS']) dy += 1;
 
-    // 鼠标控制
+    // 鼠标控制 - 直接跟随，更灵敏
     if (mouse.down) {
-      const mdx = mouse.x - this.x;
-      const mdy = mouse.y - this.y;
-      if (Math.abs(mdx) > 2) dx = Math.sign(mdx) * Math.min(Math.abs(mdx) / 50, 1);
-      if (Math.abs(mdy) > 2) dy = Math.sign(mdy) * Math.min(Math.abs(mdy) / 50, 1);
+      const sensitivity = 0.15;
+      this.x += (mouse.x - this.x) * sensitivity;
+      this.y += (mouse.y - this.y) * sensitivity;
     }
 
     // 归一化并应用速度
@@ -363,9 +362,9 @@ class SmallEnemy extends Enemy {
     super(x, y, 'small');
     this.w = 24; this.h = 24;
     this.hp = 1; this.maxHp = 1;
-    this.speed = 1.5;
+    this.speed = 1.0;
     this.score = 100;
-    this.fireRate = 120;
+    this.fireRate = 150;
     this.vx = (Math.random() - 0.5) * 2;
   }
   update() {
@@ -416,26 +415,26 @@ class MediumEnemy extends Enemy {
   constructor(x, y) {
     super(x, y, 'medium');
     this.w = 40; this.h = 36;
-    this.hp = 3 + wave; this.maxHp = this.hp;
-    this.speed = 0.8;
+    this.hp = 2 + wave; this.maxHp = this.hp;
+    this.speed = 0.5;
     this.score = 300;
-    this.fireRate = 80;
+    this.fireRate = 100;
     this.moveDir = Math.random() > 0.5 ? 1 : -1;
   }
   update() {
     this.y += this.speed;
-    this.x += this.moveDir * 1.2;
+    this.x += this.moveDir * 0.8;
     if (this.x < 30 || this.x > W - 30) this.moveDir *= -1;
     if (this.y > H + 50) this.alive = false;
     this.fireTimer--;
     if (this.fireTimer <= 0) {
       this.fire();
-      this.fireTimer = this.fireRate - wave * 2;
+      this.fireTimer = this.fireRate - wave;
     }
   }
   fire() {
     const angle = Math.atan2(player.y - this.y, player.x - this.x);
-    bullets.push(new Bullet(this.x, this.y + this.h / 2, Math.cos(angle) * 2.5, Math.sin(angle) * 2.5, 4, 'enemy', 1));
+    bullets.push(new Bullet(this.x, this.y + this.h / 2, Math.cos(angle) * 2, Math.sin(angle) * 2, 4, 'enemy', 1));
   }
   draw() {
     ctx.save();
@@ -481,10 +480,10 @@ class BigEnemy extends Enemy {
   constructor(x, y) {
     super(x, y, 'big');
     this.w = 60; this.h = 50;
-    this.hp = 12 + wave * 2; this.maxHp = this.hp;
-    this.speed = 0.4;
+    this.hp = 8 + wave; this.maxHp = this.hp;
+    this.speed = 0.3;
     this.score = 1000;
-    this.fireRate = 45;
+    this.fireRate = 60;
   }
   update() {
     this.y += this.speed;
@@ -500,7 +499,7 @@ class BigEnemy extends Enemy {
     for (let i = -2; i <= 2; i++) {
       bullets.push(new Bullet(
         this.x + i * 12, this.y + this.h / 2,
-        i * 0.4, 2.8, 4, 'enemy', 1
+        i * 0.3, 2.2, 4, 'enemy', 1
       ));
     }
   }
@@ -628,24 +627,24 @@ let player;
 
 function spawnWave() {
   waveTimer++;
-  const spawnRate = Math.max(60, 120 - wave * 5);
+  const spawnRate = Math.max(80, 150 - wave * 3);
 
   if (waveTimer % spawnRate === 0) {
     const x = Math.random() * (W - 100) + 50;
     enemies.push(new SmallEnemy(x, -30));
   }
 
-  if (waveTimer % (spawnRate * 4) === 0) {
+  if (waveTimer % (spawnRate * 5) === 0) {
     const x = Math.random() * (W - 100) + 50;
     enemies.push(new MediumEnemy(x, -40));
   }
 
-  if (waveTimer % 900 === 0) {
+  if (waveTimer % 1200 === 0) {
     enemies.push(new BigEnemy(W / 2, -60));
   }
 
   // 升级波次
-  if (waveTimer % 1200 === 0) {
+  if (waveTimer % 1500 === 0) {
     wave++;
     showFloatingText('WAVE ' + wave, W / 2, H / 2, '#00ffff', 60);
   }
